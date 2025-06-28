@@ -1,23 +1,33 @@
+// Importamos Express para crear el servidor HTTP
 import express from 'express';
+// Librería jsonwebtoken para firmar y verificar tokens
 import jwt from 'jsonwebtoken';
+// Middleware CORS para permitir peticiones desde el frontend
 import cors from 'cors';
 
+// Creamos la aplicación de Express
 const app = express();
+// Puerto donde escuchará el servidor
 const PORT = 3000;
 
 // \ud83d\udd11 Secretos JWT (en producci\u00f3n usar variables de entorno)
+// Clave secreta utilizada para firmar los access tokens
 const JWT_SECRET = 'mi-super-secreto-jwt-para-firmar-tokens';
+// Clave separada para firmar los refresh tokens
 const JWT_REFRESH_SECRET = 'mi-secreto-para-refresh-tokens';
 
 // Configuraci\u00f3n de middlewares
+// Habilitamos CORS para que el frontend pueda comunicarse con la API
 app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true
+  origin: 'http://localhost:5173', // Dominio permitido
+  credentials: true               // Enviar cookies si fuese necesario
 }));
 
+// Interpretar cuerpos JSON automáticamente
 app.use(express.json());
 
 // \ud83d\udcca Usuarios simulados
+// Lista simulada de usuarios para el ejemplo
 const users = [
   { id: '1', username: 'juan', password: '123456', role: 'user' },
   { id: '2', username: 'maria', password: 'password', role: 'admin' },
@@ -25,73 +35,93 @@ const users = [
 ];
 
 // \ud83d\udc84 Storage simple para refresh tokens (en producci\u00f3n usar Redis/DB)
+// Aquí almacenaremos de forma temporal los refresh tokens válidos
 const refreshTokens: string[] = [];
 
 // \ud83c\udff7\ufe0f Tipos TypeScript para JWT
+// Definimos la estructura que tendrán los datos dentro del access token
 interface JwtPayload {
-  userId: string;
-  username: string;
-  role: string;
-  iat?: number;
-  exp?: number;
+  userId: string;   // Identificador único del usuario
+  username: string; // Nombre de usuario
+  role: string;     // Rol asignado
+  iat?: number;     // Fecha de emisión (opcional)
+  exp?: number;     // Fecha de expiración (opcional)
 }
 
+// Datos que incluimos dentro del refresh token
 interface RefreshTokenPayload {
-  userId: string;
-  tokenVersion: number;
+  userId: string;      // Usuario al que pertenece
+  tokenVersion: number; // Para invalidar tokens antiguos
   iat?: number;
   exp?: number;
 }
 
 // \ud83d\udd10 Funci\u00f3n para crear Access Token
+// Genera un access token corto para un usuario
 function createAccessToken(user: typeof users[0]): string {
+  // Información que codificaremos dentro del JWT
   const payload: JwtPayload = {
     userId: user.id,
     username: user.username,
     role: user.role
   };
 
+  // Mostramos en consola el payload que será firmado
   console.log('\ud83c\udf7b CREANDO ACCESS TOKEN:');
   console.log('\ud83d\udccb Payload:', JSON.stringify(payload, null, 2));
   
-  const token = jwt.sign(payload, JWT_SECRET, { 
+  // Firmamos el token con nuestra clave secreta
+  const token = jwt.sign(payload, JWT_SECRET, {
     expiresIn: '15m' // Token de acceso corto
   });
   
+  // Imprimimos parte del token y la expiración para depurar
   console.log('\ud83d\udd10 Token firmado (primeros 50 chars):', token.substring(0, 50) + '...');
   console.log('\u23f0 Expira en: 15 minutos');
   
+  // Devolvemos el JWT ya firmado
   return token;
 }
 
 // \ud83d\udd04 Funci\u00f3n para crear Refresh Token
+// Genera un refresh token de larga duración
 function createRefreshToken(userId: string): string {
+  // Datos mínimos que guardaremos en el refresh token
   const payload: RefreshTokenPayload = {
     userId,
     tokenVersion: 1 // Versi\u00f3n para invalidar tokens
   };
 
+  // Mostrar el payload por consola para depuración
   console.log('\ud83d\udd04 CREANDO REFRESH TOKEN:');
   console.log('\ud83d\udccb Payload:', JSON.stringify(payload, null, 2));
   
-  const token = jwt.sign(payload, JWT_REFRESH_SECRET, { 
+  // Firmamos el refresh token con su clave específica
+  const token = jwt.sign(payload, JWT_REFRESH_SECRET, {
     expiresIn: '7d' // Refresh token largo
   });
   
+  // Mensajes informativos en consola
   console.log('\ud83d\udd10 Refresh token creado');
   console.log('\u23f0 Expira en: 7 d\u00edas');
   
   // Guardar en nuestra "base de datos" de refresh tokens
   refreshTokens.push(token);
   
+  // Devolvemos el refresh token generado
   return token;
 }
 
 // \ud83d\udd12 Middleware para verificar Access Token
-const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+// Middleware que comprueba el access token enviado por el cliente
+const authenticateToken = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
   console.log('\n\ud83d\udd0d VERIFICANDO ACCESS TOKEN...');
   
-  // Obtener token del header Authorization
+  // Extraemos el token del encabezado Authorization
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // "Bearer TOKEN"
   
@@ -100,9 +130,9 @@ const authenticateToken = (req: express.Request, res: express.Response, next: ex
 
   if (!token) {
     console.log('\u274c No se encontr\u00f3 token en Authorization header');
-    return res.status(401).json({ 
+    return res.status(401).json({
       error: 'Access token requerido',
-      hint: 'Incluye: Authorization: Bearer <token>' 
+      hint: 'Incluye: Authorization: Bearer <token>'
     });
   }
 
@@ -115,24 +145,28 @@ const authenticateToken = (req: express.Request, res: express.Response, next: ex
     console.log('\u23f0 Expira en:', new Date(decoded.exp! * 1000).toISOString());
     
     // Agregar informaci\u00f3n del usuario al request
+    // Guardamos la info del usuario en la petición para usarla en las rutas
     (req as any).user = decoded;
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
+      // El token caducó: indicamos al cliente que debe renovarlo
       console.log('\u23f0 TOKEN EXPIRADO');
       console.log('\ud83d\udcc5 Expir\u00f3 en:', error.expiredAt);
-      return res.status(401).json({ 
+      return res.status(401).json({
         error: 'Token expirado',
         expiredAt: error.expiredAt,
         hint: 'Usa el refresh token para obtener uno nuevo'
       });
     } else if (error instanceof jwt.JsonWebTokenError) {
+      // Token mal formado o con firma inválida
       console.log('\u274c TOKEN INV\u00c1LIDO:', error.message);
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: 'Token inv\u00e1lido',
-        details: error.message 
+        details: error.message
       });
     } else {
+      // Cualquier otro error inesperado
       console.log('\ud83d\udca5 ERROR INESPERADO:', error);
       return res.status(500).json({ error: 'Error verificando token' });
     }
@@ -141,7 +175,7 @@ const authenticateToken = (req: express.Request, res: express.Response, next: ex
 
 // \ud83d\udeaa RUTAS
 
-// Login
+// Endpoint para autenticarse y obtener los tokens iniciales
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   
@@ -149,18 +183,20 @@ app.post('/api/login', (req, res) => {
   console.log('\ud83d\udc64 Usuario:', username);
   console.log('\ud83d\uddd1 Password:', password ? '***' : 'No enviado');
   
+  // Buscamos el usuario en nuestra lista
   const user = users.find(u => u.username === username && u.password === password);
   
   if (user) {
     console.log('\u2705 CREDENCIALES V\u00c1LIDAS');
     console.log('\ud83d\udc64 Usuario encontrado:', { id: user.id, username: user.username, role: user.role });
     
-    // Crear tokens
+    // Credenciales válidas: generamos los dos tokens
     const accessToken = createAccessToken(user);
     const refreshToken = createRefreshToken(user.id);
     
     console.log('\n\ud83d\udce4 ENVIANDO RESPUESTA CON TOKENS...');
     
+    // Devolvemos al cliente los tokens para que los guarde
     res.json({
       success: true,
       message: 'Login exitoso',
@@ -172,22 +208,25 @@ app.post('/api/login', (req, res) => {
       note: '\ud83d\udca1 Guarda estos tokens para futuras peticiones'
     });
   } else {
+    // Credenciales incorrectas
     console.log('\u274c CREDENCIALES INV\u00c1LIDAS');
-    res.status(401).json({ 
-      success: false, 
-      message: 'Usuario o contrase\u00f1a incorrectos' 
+    res.status(401).json({
+      success: false,
+      message: 'Usuario o contrase\u00f1a incorrectos'
     });
   }
 });
 
-// Obtener perfil (requiere autenticaci\u00f3n)
+// Ruta protegida que devuelve el perfil del usuario autenticado
 app.get('/api/profile', authenticateToken, (req, res) => {
   const user = (req as any).user as JwtPayload;
   
+  // Información de depuración
   console.log('\n\ud83d\udc64 ACCESO A PERFIL:');
   console.log('\u2705 Usuario autenticado:', user.username);
   console.log('\ud83c\udf9d\ufe0f Rol:', user.role);
   
+  // Respondemos con la información extraída del token
   res.json({
     success: true,
     user: {
@@ -205,26 +244,32 @@ app.get('/api/profile', authenticateToken, (req, res) => {
 });
 
 // Datos protegidos (requiere autenticaci\u00f3n)
+// Ruta protegida que devuelve información dependiendo del rol del usuario
 app.get('/api/secret-data', authenticateToken, (req, res) => {
   const user = (req as any).user as JwtPayload;
   
+  // Registro en consola de la solicitud
   console.log('\n\ud83d\udd12 ACCESO A DATOS SECRETOS:');
   console.log('\ud83d\udc64 Usuario:', user.username);
   console.log('\ud83c\udf9d\ufe0f Rol:', user.role);
   
-  // Datos diferentes seg\u00fan el rol
+  // Datos diferentes según el rol
   let secretData;
   switch (user.role) {
     case 'superadmin':
+      // El rol más alto obtiene información muy sensible
       secretData = '\ud83d\udc51 Datos ultra secretos del super admin';
       break;
     case 'admin':
+      // Información solo para administradores
       secretData = '\ud83d\udd10 Datos secretos del admin';
       break;
     default:
+      // Para usuarios normales devolvemos datos genéricos
       secretData = '\ud83d\udcca Datos b\u00e1sicos del usuario';
   }
   
+  // Enviamos la información personalizada al cliente
   res.json({
     success: true,
     secretData,
@@ -234,7 +279,7 @@ app.get('/api/secret-data', authenticateToken, (req, res) => {
   });
 });
 
-// Refresh Token (obtener nuevo access token)
+// Endpoint para obtener un nuevo access token usando un refresh token válido
 app.post('/api/refresh', (req, res) => {
   const { refreshToken } = req.body;
   
@@ -242,22 +287,24 @@ app.post('/api/refresh', (req, res) => {
   console.log('\ud83c\udf7b Refresh token recibido:', refreshToken ? '\u00a1S\u00ed!' : 'No');
   
   if (!refreshToken) {
+    // El cliente no envió el token necesario
     console.log('\u274c No se envi\u00f3 refresh token');
-    return res.status(401).json({ 
+    return res.status(401).json({
       error: 'Refresh token requerido',
       hint: 'Env\u00eda { "refreshToken": "tu-refresh-token" }'
     });
   }
   
-  // Verificar que el refresh token est\u00e9 en nuestra lista
+  // Verificar que el refresh token esté en nuestra lista
   if (!refreshTokens.includes(refreshToken)) {
     console.log('\u274c Refresh token no encontrado en la lista v\u00e1lida');
-    return res.status(403).json({ 
-      error: 'Refresh token inv\u00e1lido o revocado' 
+    return res.status(403).json({
+      error: 'Refresh token inv\u00e1lido o revocado'
     });
   }
   
   try {
+    // Validamos que el refresh token sea auténtico
     console.log('\ud83d\udd13 Verificando refresh token...');
     const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as RefreshTokenPayload;
     
@@ -266,6 +313,7 @@ app.post('/api/refresh', (req, res) => {
     console.log('\ud83d\udfe2 Token version:', decoded.tokenVersion);
     
     // Buscar usuario
+    // Buscamos al usuario correspondiente en la base simulada
     const user = users.find(u => u.id === decoded.userId);
     if (!user) {
       console.log('\u274c Usuario no encontrado');
@@ -273,10 +321,12 @@ app.post('/api/refresh', (req, res) => {
     }
     
     // Crear nuevo access token
+    // Generamos un nuevo access token reutilizando los datos del usuario
     const newAccessToken = createAccessToken(user);
     
     console.log('\ud83c\udf7b NUEVO ACCESS TOKEN GENERADO');
     
+    // Enviamos el nuevo token al cliente
     res.json({
       success: true,
       accessToken: newAccessToken,
@@ -287,8 +337,8 @@ app.post('/api/refresh', (req, res) => {
     
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
+      // El refresh token ya expiró, lo eliminamos de la lista
       console.log('\u23f0 REFRESH TOKEN EXPIRADO');
-      // Remover de la lista de tokens v\u00e1lidos
       const index = refreshTokens.indexOf(refreshToken);
       if (index > -1) refreshTokens.splice(index, 1);
       
@@ -297,6 +347,7 @@ app.post('/api/refresh', (req, res) => {
         hint: 'Debes hacer login nuevamente'
       });
     } else {
+      // Error genérico de verificación
       console.log('\u274c ERROR VERIFICANDO REFRESH TOKEN:', error);
       return res.status(403).json({ error: 'Refresh token inv\u00e1lido' });
     }
@@ -304,6 +355,7 @@ app.post('/api/refresh', (req, res) => {
 });
 
 // Logout (invalidar refresh token)
+// Endpoint para cerrar sesión e invalidar el refresh token
 app.post('/api/logout', (req, res) => {
   const { refreshToken } = req.body;
   
@@ -311,7 +363,7 @@ app.post('/api/logout', (req, res) => {
   console.log('\ud83c\udf7b Refresh token para invalidar:', refreshToken ? 'Recibido' : 'No enviado');
   
   if (refreshToken) {
-    // Remover refresh token de la lista v\u00e1lida
+    // Si recibimos un refresh token, lo eliminamos de la lista válida
     const index = refreshTokens.indexOf(refreshToken);
     if (index > -1) {
       refreshTokens.splice(index, 1);
@@ -321,8 +373,9 @@ app.post('/api/logout', (req, res) => {
   
   console.log('\u2705 LOGOUT COMPLETADO');
   
-  res.json({ 
-    success: true, 
+  // Respondemos confirmando que se invalidó el refresh token
+  res.json({
+    success: true,
     message: 'Logout exitoso',
     note: '\ud83d\udca1 El access token seguir\u00e1 v\u00e1lido hasta que expire (15 min)'
   });
