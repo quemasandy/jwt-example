@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo: JWT Authentication</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎫 Demo: JWT Authentication</h1>
+        
+        <!-- Estado de autenticación -->
+        <div id="auth-status" class="status-box">
+            <h3>🔐 Estado de Autenticación</h3>
+            <div id="auth-info">No autenticado</div>
+        </div>
+
+        <!-- Formulario de Login -->
+        <div id="login-section" class="section">
+            <h2>🚪 Iniciar Sesión</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" required>
+                    <small>Prueba: juan, maria, o admin</small>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" required>
+                    <small>123456, password, o admin123</small>
+                </div>
+                <button type="submit">Iniciar Sesión</button>
+            </form>
+        </div>
+
+        <!-- Panel de usuario autenticado -->
+        <div id="user-section" class="section" style="display: none;">
+            <h2>👤 Panel de Usuario</h2>
+            <div id="user-info"></div>
+            
+            <div class="buttons">
+                <button id="get-profile">Ver Perfil</button>
+                <button id="get-secret">Datos Secretos</button>
+                <button id="refresh-token">Renovar Token</button>
+                <button id="logout">Cerrar Sesión</button>
+            </div>
+            
+            <div id="response-area" class="response-box"></div>
+        </div>
+
+        <!-- JWT Decoder -->
+        <div class="section">
+            <h3>🔍 JWT Decoder</h3>
+            <div class="form-group">
+                <label for="jwt-input">Pega tu JWT aquí:</label>
+                <textarea id="jwt-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+            </div>
+            <button id="decode-jwt">Decodificar JWT</button>
+            <div id="jwt-output" class="info-box"></div>
+        </div>
+
+        <!-- Token Storage -->
+        <div class="section">
+            <h3>💾 Almacenamiento de Tokens</h3>
+            <div id="token-storage" class="info-box"></div>
+            <button id="refresh-storage">Actualizar Storage</button>
+        </div>
+    </div>
+
+    <script type="module" src="/src/app.ts"></script>
+</body>
+</html>
