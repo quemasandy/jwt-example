@@ -77,7 +77,7 @@ app.use(express.json());
 // Las contraseñas deben estar hasheadas con bcrypt, Argon2 u otro algoritmo seguro
 // NOTA: Estos son usuarios de ejemplo para demostración - cambiar en producción
 const users = [
-  { id: '1', username: 'demo_user', password: 'demo123', role: 'user' },
+  { id: '1', username: 'quemasandy', password: '123123', role: 'user' },
   { id: '2', username: 'demo_admin', password: 'admin456', role: 'admin' },
   { id: '3', username: 'demo_super', password: 'super789', role: 'superadmin' },
   { id: '4', username: 'test_user', password: 'test123', role: 'user' }
