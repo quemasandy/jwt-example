@@ -1,73 +1,565 @@
 <!DOCTYPE html>
+<!-- ===================================================================================================
+     🌐 INTERFAZ FRONTEND PARA DEMOSTRACIÓN DE AUTENTICACIÓN JWT
+     ===================================================================================================
+     
+     Este archivo HTML implementa la interfaz de usuario completa para demostrar
+     un sistema de autenticación JWT (JSON Web Tokens) con todas sus características:
+     
+     🔐 CARACTERÍSTICAS PRINCIPALES:
+     • Formulario de login con validación
+     • Panel de usuario autenticado
+     • Gestión visual de tokens JWT
+     • Decodificador de tokens en tiempo real
+     • Monitoreo del almacenamiento de tokens
+     • Estados de autenticación dinámicos
+     
+     🎯 PROPÓSITO EDUCATIVO:
+     • Demostrar el flujo completo de autenticación JWT
+     • Mostrar gestión de tokens del lado cliente
+     • Ilustrar renovación automática de tokens
+     • Ejemplificar control de acceso basado en roles (RBAC)
+     
+     🏗️ ARQUITECTURA:
+     • HTML semántico con estructura clara
+     • CSS modular para estilos responsivos
+     • TypeScript para lógica de autenticación
+     • Integración con API backend de JWT
+     ================================================================================================= -->
 <html lang="es">
+<!--
+    Atributo lang="es": Especifica el idioma principal del documento
+    Esto mejora la accesibilidad y ayuda a los motores de búsqueda
+    Los lectores de pantalla usarán la pronunciación correcta
+-->
+
 <head>
+    <!-- ===========================================================================================
+         📋 METADATOS Y CONFIGURACIÓN DEL DOCUMENTO
+         ===========================================================================================
+         
+         Esta sección contiene toda la configuración esencial del documento:
+         • Codificación de caracteres
+         • Viewport para responsividad
+         • Título descriptivo
+         • Enlaces a recursos externos
+         ======================================================================================== -->
+    
+    <!-- Codificación UTF-8 para soporte completo de caracteres internacionales
+         CRÍTICO: Debe ser la primera declaración en <head> para evitar problemas de encoding
+         Permite usar emojis, acentos, y caracteres especiales sin problemas -->
     <meta charset="UTF-8">
+    
+    <!-- Configuración del viewport para diseño responsivo
+         width=device-width: Usa el ancho real del dispositivo
+         initial-scale=1.0: Establece el zoom inicial al 100%
+         Esencial para que la aplicación se vea correctamente en móviles y tablets -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo: JWT Authentication</title>
+    
+    <!-- Título descriptivo que aparece en la pestaña del navegador
+         Incluye emoji para identificación visual rápida
+         Importante para SEO y experiencia de usuario -->
+    <title>🎫 Demo: JWT Authentication - Sistema Completo de Tokens</title>
+    
+    <!-- Enlace a la hoja de estilos CSS
+         href="style.css": Archivo CSS en el mismo directorio
+         Contiene todos los estilos para la interfaz de usuario
+         Separación de responsabilidades: HTML (estructura) + CSS (presentación) -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Meta tags adicionales para mejor SEO y información del documento -->
+    <meta name="description" content="Demostración educativa de autenticación JWT con tokens de acceso y renovación">
+    <meta name="keywords" content="JWT, autenticación, tokens, JavaScript, TypeScript, seguridad">
+    <meta name="author" content="Demo JWT Authentication System">
 </head>
+
 <body>
+    <!-- ===========================================================================================
+         🏗️ CONTENEDOR PRINCIPAL DE LA APLICACIÓN
+         ===========================================================================================
+         
+         Estructura general de la aplicación organizada en secciones funcionales:
+         1. Estado de autenticación (siempre visible)
+         2. Formulario de login (visible cuando no autenticado)
+         3. Panel de usuario (visible cuando autenticado)
+         4. Herramientas JWT (siempre disponibles)
+         5. Información de almacenamiento (monitoreo de tokens)
+         ======================================================================================== -->
+    
+    <!-- Contenedor principal con clase CSS para estilos centralizados
+         La clase "container" proporciona:
+         • Ancho máximo y centrado
+         • Padding interno consistente
+         • Espaciado entre secciones -->
     <div class="container">
-        <h1>🎫 Demo: JWT Authentication</h1>
         
-        <!-- Estado de autenticación -->
+        <!-- =====================================================================================
+             🎫 TÍTULO PRINCIPAL DE LA APLICACIÓN
+             =====================================================================================
+             
+             Título prominente que identifica la aplicación y su propósito
+             El emoji 🎫 representa visualmente el concepto de tokens/tickets de acceso
+             ================================================================================= -->
+        <h1>🎫 Demo: JWT Authentication - Sistema Completo de Tokens</h1>
+        
+        <!-- =====================================================================================
+             🔐 SECCIÓN: ESTADO DE AUTENTICACIÓN
+             =====================================================================================
+             
+             Panel siempre visible que muestra el estado actual de autenticación del usuario
+             Se actualiza dinámicamente via JavaScript según el estado de los tokens
+             
+             Estados posibles:
+             • No autenticado (sin tokens)
+             • Autenticado (tokens válidos)
+             • Token expirado (requiere renovación)
+             • Error de autenticación
+             ================================================================================= -->
         <div id="auth-status" class="status-box">
+            <!-- Título de la sección con emoji identificativo -->
             <h3>🔐 Estado de Autenticación</h3>
-            <div id="auth-info">No autenticado</div>
+            
+            <!-- Contenedor para información dinámica del estado
+                 Este div será actualizado por JavaScript con:
+                 • Información del usuario autenticado
+                 • Estado de validez de tokens
+                 • Tiempo restante de tokens
+                 • Mensajes de error o éxito -->
+            <div id="auth-info">
+                <!-- Estado inicial antes de que JavaScript se ejecute -->
+                ⏳ Verificando estado de autenticación...
+            </div>
         </div>
 
-        <!-- Formulario de Login -->
+        <!-- =====================================================================================
+             🚪 SECCIÓN: FORMULARIO DE LOGIN
+             =====================================================================================
+             
+             Formulario de autenticación que permite a los usuarios iniciar sesión
+             Se muestra cuando el usuario no está autenticado
+             Se oculta automáticamente después de login exitoso
+             
+             Características:
+             • Validación HTML5 nativa (required)
+             • Suggestions de usuarios de prueba
+             • Submit handling via JavaScript
+             • Feedback visual de errores/éxito
+             ================================================================================= -->
         <div id="login-section" class="section">
-            <h2>🚪 Iniciar Sesión</h2>
+            <!-- Título de la sección de login -->
+            <h2>🚪 Iniciar Sesión en el Sistema JWT</h2>
+            
+            <!-- Formulario de autenticación
+                 id="login-form": Para captura de eventos en JavaScript
+                 Los datos se envían via JavaScript, no submit tradicional -->
             <form id="login-form">
+                
+                <!-- Campo de nombre de usuario -->
                 <div class="form-group">
-                    <label for="username">Usuario:</label>
-                    <input type="text" id="username" required>
-                    <small>Prueba: juan, maria, o admin</small>
+                    <!-- Label semántico vinculado al input via "for" -->
+                    <label for="username">👤 Nombre de Usuario:</label>
+                    
+                    <!-- Input de texto para username
+                         type="text": Tipo de campo de texto
+                         id="username": Para vinculación con label y JavaScript
+                         required: Validación HTML5 - campo obligatorio
+                         autocomplete="username": Mejora UX con autocompletado -->
+                    <input type="text" 
+                           id="username" 
+                           name="username"
+                           autocomplete="username"
+                           placeholder="Ingresa tu nombre de usuario"
+                           required>
+                    
+                    <!-- Ayuda contextual con usuarios de prueba disponibles -->
+                    <small class="help-text">
+                        📝 <strong>Usuarios de prueba:</strong> 
+                        <em>juan</em>, <em>maria</em>, <em>admin</em>, <em>quemasandy</em>
+                    </small>
                 </div>
+                
+                <!-- Campo de contraseña -->
                 <div class="form-group">
-                    <label for="password">Contraseña:</label>
-                    <input type="password" id="password" required>
-                    <small>123456, password, o admin123</small>
+                    <!-- Label semántico para contraseña -->
+                    <label for="password">🔑 Contraseña:</label>
+                    
+                    <!-- Input de contraseña
+                         type="password": Oculta los caracteres por seguridad
+                         id="password": Para JavaScript y vinculación
+                         required: Campo obligatorio
+                         autocomplete="current-password": Para gestores de contraseñas -->
+                    <input type="password" 
+                           id="password" 
+                           name="password"
+                           autocomplete="current-password"
+                           placeholder="Ingresa tu contraseña"
+                           required>
+                    
+                    <!-- Ayuda con contraseñas de prueba -->
+                    <small class="help-text">
+                        🔐 <strong>Contraseñas:</strong> 
+                        <em>12345</em>, <em>password</em>, <em>admin123</em>, <em>123</em>
+                    </small>
                 </div>
-                <button type="submit">Iniciar Sesión</button>
+                
+                <!-- Botón de envío del formulario
+                     type="submit": Trigger para evento submit del form
+                     El JavaScript capturará este evento para procesar el login -->
+                <button type="submit" class="btn-primary">
+                    🚀 Iniciar Sesión con JWT
+                </button>
+                
+                <!-- Información adicional sobre el proceso de login -->
+                <div class="info-note">
+                    <p>
+                        💡 <strong>¿Cómo funciona?</strong><br>
+                        Al hacer login recibirás dos tokens JWT:
+                    </p>
+                    <ul>
+                        <li><strong>Access Token:</strong> Para acceder a recursos (15 min)</li>
+                        <li><strong>Refresh Token:</strong> Para renovar access tokens (7 días)</li>
+                    </ul>
+                </div>
             </form>
         </div>
 
-        <!-- Panel de usuario autenticado -->
+        <!-- =====================================================================================
+             👤 SECCIÓN: PANEL DE USUARIO AUTENTICADO
+             =====================================================================================
+             
+             Panel que se muestra solo cuando el usuario está autenticado
+             Contiene todas las funcionalidades disponibles para usuarios logueados
+             
+             Funcionalidades:
+             • Información del usuario actual
+             • Botones para acciones autenticadas
+             • Área de respuestas de la API
+             • Gestión de tokens
+             
+             style="display: none;": Inicialmente oculto, se muestra via JavaScript
+             ================================================================================= -->
         <div id="user-section" class="section" style="display: none;">
-            <h2>👤 Panel de Usuario</h2>
-            <div id="user-info"></div>
             
+            <!-- Título del panel de usuario -->
+            <h2>👤 Panel de Usuario Autenticado</h2>
+            
+            <!-- Contenedor para información dinámica del usuario
+                 Será poblado por JavaScript con:
+                 • Nombre de usuario
+                 • Rol en el sistema
+                 • Estado de autenticación
+                 • Tiempo de sesión -->
+            <div id="user-info" class="user-welcome">
+                <!-- Será reemplazado por JavaScript después del login -->
+            </div>
+            
+            <!-- ================================================================================
+                 🎮 BOTONES DE ACCIONES AUTENTICADAS
+                 ================================================================================
+                 
+                 Conjunto de botones que demuestran diferentes aspectos de la autenticación JWT:
+                 • Obtener datos del perfil (datos del token)
+                 • Acceder a datos secretos (autorización por roles)
+                 • Renovar tokens manualmente
+                 • Cerrar sesión de forma segura
+                 ============================================================================= -->
             <div class="buttons">
-                <button id="get-profile">Ver Perfil</button>
-                <button id="get-secret">Datos Secretos</button>
-                <button id="refresh-token">Renovar Token</button>
-                <button id="logout">Cerrar Sesión</button>
+                
+                <!-- Botón para obtener perfil de usuario
+                     Demuestra cómo extraer información directamente del JWT -->
+                <button id="get-profile" class="btn-secondary">
+                    📋 Ver Mi Perfil
+                </button>
+                
+                <!-- Botón para acceder a datos secretos
+                     Demuestra autorización basada en roles (RBAC) -->
+                <button id="get-secret" class="btn-secondary">
+                    🔒 Datos Secretos
+                </button>
+                
+                <!-- Botón para renovar token manualmente
+                     Demuestra el proceso de refresh de tokens -->
+                <button id="refresh-token" class="btn-secondary">
+                    🔄 Renovar Token
+                </button>
+                
+                <!-- Botón para cerrar sesión
+                     Demuestra logout seguro con invalidación de tokens -->
+                <button id="logout" class="btn-danger">
+                    🚪 Cerrar Sesión
+                </button>
             </div>
             
-            <div id="response-area" class="response-box"></div>
-        </div>
-
-        <!-- JWT Decoder -->
-        <div class="section">
-            <h3>🔍 JWT Decoder</h3>
-            <div class="form-group">
-                <label for="jwt-input">Pega tu JWT aquí:</label>
-                <textarea id="jwt-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+            <!-- ================================================================================
+                 📱 ÁREA DE RESPUESTAS DE LA API
+                 ================================================================================
+                 
+                 Panel donde se muestran las respuestas de las peticiones a la API
+                 Se actualiza dinámicamente con el resultado de cada acción
+                 Incluye formato JSON para inspección técnica
+                 ============================================================================= -->
+            <div id="response-area" class="response-box">
+                <!-- Mensaje inicial antes de realizar peticiones -->
+                <div class="placeholder-text">
+                    📡 Las respuestas de la API se mostrarán aquí<br>
+                    <small>Haz clic en cualquier botón de arriba para comenzar</small>
+                </div>
             </div>
-            <button id="decode-jwt">Decodificar JWT</button>
-            <div id="jwt-output" class="info-box"></div>
         </div>
 
-        <!-- Token Storage -->
+        <!-- =====================================================================================
+             🔍 SECCIÓN: DECODIFICADOR DE JWT
+             =====================================================================================
+             
+             Herramienta educativa para decodificar y analizar tokens JWT
+             Permite a los usuarios inspeccionar la estructura y contenido de cualquier JWT
+             
+             Características:
+             • Decodificación en tiempo real
+             • Análisis de header, payload y signature
+             • Validación de estructura
+             • Información temporal (emisión, expiración)
+             • Advertencias de seguridad
+             ================================================================================= -->
         <div class="section">
-            <h3>💾 Almacenamiento de Tokens</h3>
-            <div id="token-storage" class="info-box"></div>
-            <button id="refresh-storage">Actualizar Storage</button>
+            
+            <!-- Título de la herramienta de decodificación -->
+            <h3>🔍 Decodificador y Analizador de JWT</h3>
+            
+            <!-- Información educativa sobre la herramienta -->
+            <div class="info-note">
+                <p>
+                    💡 <strong>¿Para qué sirve?</strong><br>
+                    Esta herramienta te permite inspeccionar la estructura interna de cualquier token JWT.
+                    <strong>Nota:</strong> Solo decodifica el contenido, no verifica la firma.
+                </p>
+            </div>
+            
+            <!-- Campo de entrada para el JWT -->
+            <div class="form-group">
+                <!-- Label para el textarea -->
+                <label for="jwt-input">🎫 Pega tu JWT aquí para analizarlo:</label>
+                
+                <!-- Textarea para ingresar el token JWT
+                     id="jwt-input": Para captura en JavaScript
+                     placeholder: Ejemplo visual del formato esperado
+                     rows: Altura inicial del textarea -->
+                <textarea id="jwt-input" 
+                         placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                         rows="4"></textarea>
+                
+                <!-- Ayuda sobre el formato JWT -->
+                <small class="help-text">
+                    📋 Un JWT válido tiene 3 partes separadas por puntos: <code>header.payload.signature</code>
+                </small>
+            </div>
+            
+            <!-- Botón para activar la decodificación -->
+            <button id="decode-jwt" class="btn-secondary">
+                🔍 Decodificar y Analizar JWT
+            </button>
+            
+            <!-- Área donde se muestra el resultado de la decodificación
+                 id="jwt-output": Para actualización via JavaScript
+                 class="info-box": Estilos base para el contenedor de información -->
+            <div id="jwt-output" class="info-box">
+                <!-- Mensaje inicial antes de decodificar -->
+                <div class="placeholder-text">
+                    🎯 El análisis del JWT aparecerá aquí<br>
+                    <small>Pega un token JWT arriba y presiona "Decodificar"</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================================================================
+             💾 SECCIÓN: MONITOREO DE ALMACENAMIENTO DE TOKENS
+             =====================================================================================
+             
+             Panel de monitoreo que muestra información en tiempo real sobre:
+             • Estado de los tokens almacenados
+             • Información de expiración
+             • Sincronización entre memoria y localStorage
+             • Estadísticas de uso
+             
+             Se actualiza automáticamente cada 5 segundos via JavaScript
+             ================================================================================= -->
+        <div class="section">
+            
+            <!-- Título de la sección de monitoreo -->
+            <h3>💾 Monitor de Almacenamiento de Tokens</h3>
+            
+            <!-- Información explicativa sobre el almacenamiento -->
+            <div class="info-note">
+                <p>
+                    🔧 <strong>Estrategia de Almacenamiento Dual:</strong><br>
+                    Los tokens se guardan tanto en <strong>memoria</strong> (velocidad) como en 
+                    <strong>localStorage</strong> (persistencia). Esto permite sesiones que sobreviven 
+                    a recargas de página mientras mantienen seguridad.
+                </p>
+            </div>
+            
+            <!-- Contenedor para información dinámica del storage
+                 id="token-storage": Para actualización via JavaScript
+                 Se actualiza automáticamente con:
+                 • Estado de access token y refresh token
+                 • Tiempos de expiración
+                 • Información de almacenamiento
+                 • Sincronización entre storages -->
+            <div id="token-storage" class="info-box">
+                <!-- Estado inicial antes de verificar tokens -->
+                <div class="placeholder-text">
+                    💭 Información de tokens aparecerá aquí<br>
+                    <small>Inicia sesión para ver el estado de almacenamiento</small>
+                </div>
+            </div>
+            
+            <!-- Botón para actualización manual del display
+                 Complementa la actualización automática cada 5 segundos -->
+            <button id="refresh-storage" class="btn-secondary">
+                🔄 Actualizar Monitor
+            </button>
+            
+            <!-- Información técnica adicional -->
+            <div class="technical-info">
+                <details>
+                    <summary>🔧 Información Técnica del Almacenamiento</summary>
+                    <div class="tech-details">
+                        <h4>📊 Estrategias de Almacenamiento:</h4>
+                        <ul>
+                            <li><strong>Memoria:</strong> Rápido acceso, se pierde al recargar</li>
+                            <li><strong>localStorage:</strong> Persiste entre sesiones, vulnerable a XSS</li>
+                            <li><strong>Producción:</strong> Considerar cookies httpOnly + SameSite</li>
+                        </ul>
+                        
+                        <h4>⚠️ Consideraciones de Seguridad:</h4>
+                        <ul>
+                            <li>Los tokens en localStorage son accesibles via JavaScript</li>
+                            <li>Usar HTTPS siempre en producción</li>
+                            <li>Implementar CSP (Content Security Policy)</li>
+                            <li>Considerar almacenamiento en cookies seguras</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =====================================================================================
+             📚 SECCIÓN: INFORMACIÓN EDUCATIVA ADICIONAL
+             =====================================================================================
+             
+             Panel educativo con información sobre JWT y esta demostración
+             Proporciona contexto y enlaces útiles para aprender más
+             ================================================================================= -->
+        <div class="section educational-section">
+            <h3>📚 Acerca de esta Demostración JWT</h3>
+            
+            <div class="info-grid">
+                <!-- Información sobre JWT -->
+                <div class="info-card">
+                    <h4>🎫 ¿Qué es JWT?</h4>
+                    <p>
+                        JSON Web Tokens es un estándar abierto (RFC 7519) para transmitir 
+                        información de forma segura entre partes como un objeto JSON. 
+                        Los tokens están firmados digitalmente y pueden ser verificados y confiables.
+                    </p>
+                </div>
+                
+                <!-- Información sobre la arquitectura -->
+                <div class="info-card">
+                    <h4>🏗️ Arquitectura de la Demo</h4>
+                    <p>
+                        <strong>Frontend:</strong> HTML5 + TypeScript + Vite<br>
+                        <strong>Backend:</strong> Node.js + Express + JWT<br>
+                        <strong>Autenticación:</strong> Doble token (access + refresh)
+                    </p>
+                </div>
+                
+                <!-- Información sobre características -->
+                <div class="info-card">
+                    <h4>✨ Características Implementadas</h4>
+                    <ul>
+                        <li>🔐 Autenticación JWT completa</li>
+                        <li>🔄 Renovación automática de tokens</li>
+                        <li>👥 Control de acceso basado en roles</li>
+                        <li>🚪 Logout server-side seguro</li>
+                        <li>📱 Interfaz responsive</li>
+                        <li>🛡️ Manejo seguro de errores</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- ===========================================================================================
+         📜 CARGA DEL SCRIPT PRINCIPAL
+         ===========================================================================================
+         
+         Carga del archivo TypeScript principal que contiene toda la lógica de la aplicación
+         
+         Atributos importantes:
+         • type="module": Habilita módulos ES6 en el navegador
+         • src="/src/app.ts": Ruta al archivo TypeScript principal
+         
+         Vite (el bundler) se encarga de:
+         • Compilar TypeScript a JavaScript
+         • Resolver imports de módulos
+         • Hot reloading en desarrollo
+         • Optimización para producción
+         ======================================================================================== -->
     <script type="module" src="/src/app.ts"></script>
+    
+    <!-- Script inline para detección de JavaScript deshabilitado -->
+    <noscript>
+        <div style="padding: 20px; background: #ff6b6b; color: white; text-align: center; margin: 20px;">
+            ⚠️ <strong>JavaScript Requerido:</strong> 
+            Esta aplicación requiere JavaScript para funcionar. 
+            Por favor habilita JavaScript en tu navegador.
+        </div>
+    </noscript>
 </body>
 </html>
+
+<!-- ===============================================================================================
+     📝 NOTAS FINALES PARA DESARROLLADORES
+     ===============================================================================================
+     
+     🎯 PROPÓSITO DE ESTE ARCHIVO:
+     Este archivo HTML sirve como base para una demostración educativa completa de 
+     autenticación JWT. Cada elemento está documentado para facilitar el aprendizaje.
+     
+     🏗️ ESTRUCTURA DE LA APLICACIÓN:
+     1. Metadatos y configuración (SEO, responsive, encoding)
+     2. Estado de autenticación (siempre visible)
+     3. Formulario de login (condicional)
+     4. Panel de usuario (condicional)
+     5. Herramientas JWT (educativas)
+     6. Monitor de almacenamiento (técnico)
+     7. Información educativa (contexto)
+     
+     🔧 TECNOLOGÍAS UTILIZADAS:
+     • HTML5 semántico para estructura
+     • CSS Grid/Flexbox para layout responsive
+     • TypeScript para lógica robusta
+     • Vite como bundler moderno
+     • JWT para autenticación stateless
+     
+     🛡️ CONSIDERACIONES DE SEGURIDAD:
+     • Validación HTML5 en formularios
+     • Sanitización de contenido dinámico
+     • Headers de seguridad apropiados
+     • Manejo seguro de tokens
+     • HTTPS requerido en producción
+     
+     📚 RECURSOS EDUCATIVOS:
+     • Comentarios exhaustivos en código
+     • Información contextual en la UI
+     • Ejemplos de mejores prácticas
+     • Patrones de seguridad modernos
+     
+     🎨 ACCESIBILIDAD:
+     • Labels semánticos en formularios
+     • Estructura heading jerárquica
+     • Contraste de colores adecuado
+     • Soporte para lectores de pantalla
+     • Navegación por teclado
+     ============================================================================================= -->
