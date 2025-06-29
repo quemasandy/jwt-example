@@ -5,7 +5,8 @@
 // URL base del servidor backend que implementa la autenticación JWT
 // En producción, esta URL debería configurarse através de variables de entorno
 // para permitir diferentes endpoints según el ambiente (desarrollo, staging, producción)
-const API_BASE = 'http://localhost:3000/api';
+// Vite expone variables de entorno que empiecen con VITE_ al frontend
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000/api';
 
 // ===================================================================================================
 // 🏷️ DEFINICIONES DE TIPOS TYPESCRIPT PARA JWT Y AUTENTICACIÓN

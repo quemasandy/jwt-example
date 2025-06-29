@@ -30,25 +30,26 @@ const app = express();
 
 // Puerto donde el servidor escuchará las conexiones HTTP
 // En producción esto debería venir de process.env.PORT para flexibilidad de despliegue
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ===================================================================================================
 // 🔑 CONFIGURACIÓN DE SEGURIDAD JWT
 // ===================================================================================================
 
 // SECRETOS JWT PARA FIRMADO DIGITAL DE TOKENS
-// CRÍTICO: En producción estos deben almacenarse en variables de entorno, nunca hardcoded
+// CRÍTICO: Estos secretos se obtienen de variables de entorno para máxima seguridad
 // Los secretos deben ser strings aleatorios de al menos 256 bits (32 caracteres)
+// En desarrollo se proporcionan valores por defecto para facilitar el setup
 
 // Clave secreta para firmar y verificar ACCESS TOKENS
 // Se usa con el algoritmo HMAC SHA-256 (HS256) para crear la firma digital
 // Esta clave debe ser altamente secreta y rotarse periódicamente en producción
-const JWT_SECRET = 'mi-super-secreto-jwt-para-firmar-tokens';
+const JWT_SECRET = process.env.JWT_SECRET || 'development-jwt-secret-change-in-production';
 
 // Clave separada para REFRESH TOKENS - implementa estrategia de doble-clave
 // Usar claves separadas aumenta la seguridad: si una se compromete, la otra sigue siendo válida
 // Permite invalidar solo un tipo de token sin afectar al otro
-const JWT_REFRESH_SECRET = 'mi-secreto-para-refresh-tokens';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'development-refresh-secret-change-in-production';
 
 // ===================================================================================================
 // ⚙️ CONFIGURACIÓN DE MIDDLEWARE DE EXPRESS
@@ -57,7 +58,7 @@ const JWT_REFRESH_SECRET = 'mi-secreto-para-refresh-tokens';
 // Configurar middleware CORS para permitir comunicación cross-origin
 // CORS es necesario porque el frontend (localhost:5173) y backend (localhost:3000) son diferentes orígenes
 app.use(cors({
-  origin: 'http://localhost:5173', // Dominio específico del frontend - más seguro que '*'
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Dominio específico del frontend - más seguro que '*'
   credentials: true                // Permite envío de cookies y headers de autenticación
   // En producción: usar array de orígenes permitidos y configurar según el ambiente
 }));
@@ -74,11 +75,12 @@ app.use(express.json());
 // Lista simulada de usuarios para demostración del sistema JWT
 // IMPORTANTE: En producción esto debe ser una base de datos real (PostgreSQL, MongoDB, etc.)
 // Las contraseñas deben estar hasheadas con bcrypt, Argon2 u otro algoritmo seguro
+// NOTA: Estos son usuarios de ejemplo para demostración - cambiar en producción
 const users = [
-  { id: '1', username: 'juan', password: '12345', role: 'user' },
-  { id: '2', username: 'maria', password: 'password', role: 'admin' },
-  { id: '3', username: 'admin', password: 'admin123', role: 'superadmin' },
-  { id: '4', username: 'quemasandy', password: '123', role: 'superadmin' }
+  { id: '1', username: 'demo_user', password: 'demo123', role: 'user' },
+  { id: '2', username: 'demo_admin', password: 'admin456', role: 'admin' },
+  { id: '3', username: 'demo_super', password: 'super789', role: 'superadmin' },
+  { id: '4', username: 'test_user', password: 'test123', role: 'user' }
 ];
 
 // ===================================================================================================
@@ -1023,8 +1025,8 @@ app.listen(PORT, () => {
   console.log('🚀 ================================================');
   console.log(`📱 Puerto: ${PORT}`);
   console.log(`🌐 URL base: http://localhost:${PORT}`);
-  console.log(`🔐 JWT Secret configurado: ${JWT_SECRET.substring(0, 20)}...`);
-  console.log(`🔄 Refresh Secret configurado: ${JWT_REFRESH_SECRET.substring(0, 20)}...`);
+  console.log('🔐 JWT authentication configured');
+  console.log('🔄 Refresh token system enabled');
   console.log('💡 Endpoints disponibles en http://localhost:3000/api/');
   console.log('\n📋 CONFIGURACIÓN DEL SERVIDOR:');
   console.log('   ✅ Express.js configurado');
