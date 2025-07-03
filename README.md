@@ -77,6 +77,18 @@ npm run dev
 - **Frontend:** http://localhost:5173
 - **API Backend:** http://localhost:3000/api
 
+### 5. **Monitoreo con Datadog**
+
+Para enviar trazas y métricas a Datadog:
+
+```env
+DATADOG_ENABLED=true
+DATADOG_SERVICE=jwt-example-backend
+DATADOG_ENV=local
+```
+
+Asegúrate de tener un agente de Datadog en ejecución y luego inicia el backend con `npm run dev`.
+
 ## 📚 Guía de Aprendizaje para Estudiantes
 
 ### 🎯 **Nivel 1: Conceptos Básicos (30-45 min)**

@@ -6,6 +6,24 @@
 // 📦 IMPORTACIONES Y DEPENDENCIAS PRINCIPALES
 // ===================================================================================================
 
+// ============================================================================
+// 📈 INTEGRACIÓN CON DATADOG (MONITOREO)
+// ============================================================================
+
+// Importar el tracer de Datadog para habilitar monitoreo APM
+// La inicialización debe ocurrir antes de cargar Express para instrumentarlo
+import tracer from 'dd-trace';
+
+if (process.env.DATADOG_ENABLED === 'true') {
+  tracer.init({
+    service: process.env.DATADOG_SERVICE || 'jwt-example-backend',
+    env: process.env.DATADOG_ENV || 'development',
+    logInjection: true
+  });
+  tracer.use('express');
+  console.log('📈 Datadog tracing habilitado');
+}
+
 // Framework Express.js para crear el servidor HTTP y manejar rutas REST
 // Express es el framework web más popular para Node.js, proporciona routing, middleware y manejo de HTTP
 import express from 'express';
